@@ -1,38 +1,47 @@
-# Use Node.js LTS
-FROM node:18-alpine AS development
+# Use Node.js 20 (LTS atual)
+FROM node:20-alpine AS development
 
 WORKDIR /usr/src/app
 
-# Copiar package.json
+# Copiar arquivos de dependências
 COPY package*.json ./
+COPY tsconfig*.json ./
 
-# Instalar dependências
-RUN npm install
+# Instalar dependências incluindo devDependencies
+RUN npm ci --include=dev
 
 # Copiar código fonte
 COPY . .
 
+# Build da aplicação
+RUN npm run build
+
 # Expor porta
 EXPOSE 3000
 
-# Comando para desenvolvimento (não build)
+# Comando para desenvolvimento
 CMD ["npm", "run", "start:dev"]
 
-FROM node:18-alpine AS production
+# Stage de produção
+FROM node:20-alpine AS production
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 
 WORKDIR /usr/src/app
 
+# Copiar arquivos de dependências
 COPY package*.json ./
+COPY tsconfig*.json ./
 
-RUN npm install --only=production
+# Instalar apenas dependências de produção
+RUN npm ci --only=production
 
-COPY . .
+# Copiar arquivos buildados do stage de desenvolvimento
+COPY --from=development /usr/src/app/dist ./dist
 
-RUN npm run build
-
+# Expor porta
 EXPOSE 3000
 
-CMD ["npm", "run", "start:prod"]
+# Comando para produção
+CMD ["node", "dist/main"]
