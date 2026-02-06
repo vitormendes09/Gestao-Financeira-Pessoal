@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { UserModel, UserSchema } from './schema/user.schema';
+import { TransactionModel, TransactionSchema } from './schema/transaction.schema'; // Importar
 
 @Module({
   imports: [
@@ -11,6 +13,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       }),
       inject: [ConfigService],
     }),
+    MongooseModule.forFeature([
+      { name: UserModel.name, schema: UserSchema },
+      { name: TransactionModel.name, schema: TransactionSchema }, // Adicionar
+    ]),
   ],
+  exports: [MongooseModule],
 })
-export class DatabaseModule {}
+export class DatabaseModule {} 
